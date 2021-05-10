@@ -10,10 +10,14 @@ services:
     image: 'mireiawen/unifi:latest'
     restart: 'always'
     volumes:
-    - 'data:/usr/lib/unifi/data'
-    - 'logs:/usr/lib/unifi/logs'
+    - type: 'volume'
+      source: 'data'
+      target: '/usr/lib/unifi/data'
+    - type: 'volume'
+      source: 'logs'
+      target: '/usr/lib/unifi/logs'
     network_mode: 'bridge'
-    hostname: 'unifi.$DOMAIN'
+    hostname: '$HOSTNAME.$DOMAIN'
     container_name: 'unifi'
     ports:
     - target: 3478
@@ -45,35 +49,28 @@ services:
       MEM_LIMIT: "$MEM_LIMIT"
     labels:
     - 'traefik.enable=true'
-
-    - 'traefik.http.routers.unifi-admin.rule=Host(`unifi.$DOMAIN`)'
+    - 'traefik.http.routers.unifi-admin.rule=Host(`$HOSTNAME.$DOMAIN`)'
     - 'traefik.http.routers.unifi-admin.entrypoints=web'
-    - 'traefik.http.routers.unifi-admin.middlewares=ipwhitelist,http-to-https'
+    - 'traefik.http.routers.unifi-admin.middlewares=unifi-admin-whitelist,http-to-https'
     - 'traefik.http.routers.unifi-admin.service=unifi-admin'
-
-    - 'traefik.http.routers.unifi-admin-secure.rule=Host(`unifi.$DOMAIN`)'
+    - 'traefik.http.routers.unifi-admin-secure.rule=Host(`$HOSTNAME.$DOMAIN`)'
     - 'traefik.http.routers.unifi-admin-secure.entrypoints=websecure'
     - 'traefik.http.routers.unifi-admin-secure.middlewares=ipwhitelist'
     - 'traefik.http.routers.unifi-admin-secure.service=unifi-admin'
-
-    - 'traefik.http.routers.unifi-portal.rule=Host(`portal.$DOMAIN`)'
-    - 'traefik.http.routers.unifi-portal.entrypoints=web'
-    - 'traefik.http.routers.unifi-portal.middlewares=ipwhitelist,http-to-https'
-    - 'traefik.http.routers.unifi-portal.service=unifi-portal'
-
-    - 'traefik.http.routers.unifi-portal-secure.rule=Host(`portal.$DOMAIN`)'
-    - 'traefik.http.routers.unifi-portal-secure.entrypoints=websecure'
-    - 'traefik.http.routers.unifi-portal-secure.middlewares=ipwhitelist'
-    - 'traefik.http.routers.unifi-portal-secure.service=unifi-portal'
-
-    - 'traefik.http.middlewares.http-to-https.redirectscheme.scheme=https'
-    - 'traefik.http.middlewares.http-to-https.redirectscheme.permanent=true'
-    - 'traefik.http.middlewares.ipwhitelist.ipwhitelist.sourcerange=$NETWORKS'
-
+    - 'traefik.http.middlewares.unifi-admin-whitelist.ipwhitelist.sourcerange=$NETWORKS'
     - 'traefik.http.services.unifi-admin.loadbalancer.passhostheader=true'
     - 'traefik.http.services.unifi-admin.loadbalancer.server.port=8443'
     - 'traefik.http.services.unifi-admin.loadbalancer.server.scheme=https'
 
+    - 'traefik.http.routers.unifi-portal.rule=Host(`portal.$DOMAIN`)'
+    - 'traefik.http.routers.unifi-portal.entrypoints=web'
+    - 'traefik.http.routers.unifi-portal.middlewares=unifi-portal-whitelist,http-to-https'
+    - 'traefik.http.routers.unifi-portal.service=unifi-portal'
+    - 'traefik.http.routers.unifi-portal-secure.rule=Host(`portal.$DOMAIN`)'
+    - 'traefik.http.routers.unifi-portal-secure.entrypoints=websecure'
+    - 'traefik.http.routers.unifi-portal-secure.middlewares=unifi-portal-whitelist'
+    - 'traefik.http.routers.unifi-portal-secure.service=unifi-portal'
+    - 'traefik.http.middlewares.unifi-portal-whitelist.ipwhitelist.sourcerange=$NETWORKS'
     - 'traefik.http.services.unifi-portal.loadbalancer.passhostheader=true'
     - 'traefik.http.services.unifi-portal.loadbalancer.server.port=8843'
     - 'traefik.http.services.unifi-portal.loadbalancer.server.scheme=https'
