@@ -1,3 +1,5 @@
-.env
 .git
 .gitignore
+.env
+*.swp
+docker-compose.yml
